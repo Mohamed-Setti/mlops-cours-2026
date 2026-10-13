@@ -1,13 +1,69 @@
+
+# Pipeline du projet : download -> prepare -> train -> evaluate.
+# DVC relance les stages dont les dépendances ou paramètres ont changé.
+
 stages:
   download:
     cmd: python -m src.download
     deps:
-    - src/dataset_config.py
-    - src/download.py
+      - src/dataset_config.py
+      - src/download.py
+      - dataset.yaml
     params:
-    - dataset.yaml:
-      - features
-      - raw_path
-      - target
+      - dataset.yaml:
+          - features
+          - raw_path
+          - target
     outs:
-    - data/raw/dataset.csv
+      - data/raw/dataset.csv
+
+  prepare:
+    cmd: python -m src.prepare
+    deps:
+      - src/dataset_config.py
+      - src/prepare.py
+      - data/raw/dataset.csv
+      - dataset.yaml
+    params:
+      - params.yaml:
+          - prepare
+      - dataset.yaml:
+          - features
+          - split
+          - target
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+      - data/processed/features.parquet
+
+  train:
+    cmd: python -m src.train
+    deps:
+      - src/dataset_config.py
+      - src/train.py
+      - data/processed/train.csv
+      - data/processed/test.csv
+      - dataset.yaml
+    params:
+      - params.yaml:
+          - train
+      - dataset.yaml:
+          - metrics
+    outs:
+      - models/model
+
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+      - src/evaluate.py
+      - src/train.py
+      - src/dataset_config.py
+      - models/model
+      - data/processed/test.csv
+      - dataset.yaml
+    params:
+      - dataset.yaml:
+          - metrics
+    metrics:
+      - reports/metrics.json:
+          cache: false
