@@ -1,0 +1,20 @@
+
+# Feature store local du projet : registre et store en ligne dans des fichiers SQLite.
+# Les fichiers générés dans features/data/ sont ignorés par Git et recréés par `feast apply`.
+# Store hors ligne : Parquet.
+
+project: scoring
+registry: data/registry.db
+provider: local
+
+offline_store:
+  type: file
+
+online_store:
+  type: sqlite
+  path: data/online_store.db
+
+entity_key_serialization_version: 3
+
+auth:
+  type: no_auth
